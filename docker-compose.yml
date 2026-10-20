@@ -12,4 +12,3 @@ services:
   agent-github:
     build: ./agent-github
     env_file: .env
-    restart: unless-stopped
