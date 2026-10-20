@@ -1,22 +1,46 @@
-import os
-import asyncio
-from anthropic import AsyncAnthropic
+import logging
+from imapclient import IMAPClient
 
-client = AsyncAnthropic(
-    api_key=os.environ.get("ANTHROPIC_API_KEY"),
-)
+from config import IMAP_SERVER, IMAP_USER, IMAP_PASSWORD
+from mailbox import parse_message
+from classifier import classify_email
+from notifier import notify_discord
 
-async def main() -> None:
-    message = await client.messages.create(
-        max_tokens=1024,
-        messages=[
-            {
-                "role": "user",
-                "content": "Hello, Claude",
-            }
-        ],
-        model="claude-haiku-4-5-20251001",
-    )
-    print(message.content)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+log = logging.getLogger("agent-mail")
 
-asyncio.run(main())
+
+def process_message(server: IMAPClient, uid: int) -> None:
+    raw = server.fetch([uid], ["RFC822"])[uid][b"RFC822"]
+    mail = parse_message(raw)
+    log.info("Nouveau mail de %s — %s", mail["sender"], mail["subject"])
+
+    summary = classify_email(mail["sender"], mail["subject"], mail["body"])
+    notify_discord(mail["sender"], mail["subject"], summary)
+
+
+def run() -> None:
+    log.info("Connexion IMAP à %s...", IMAP_SERVER)
+    with IMAPClient(IMAP_SERVER, ssl=True) as server:
+        server.login(IMAP_USER, IMAP_PASSWORD)
+        server.select_folder("INBOX")
+        log.info("Connecté, en écoute (IDLE)...")
+
+        while True:
+            server.idle()
+            try:
+                responses = server.idle_check(timeout=300)
+            finally:
+                server.idle_done()
+
+            if not responses:
+                continue
+
+            uids = server.search(["UNSEEN"])
+            for uid in uids:
+                process_message(server, uid)
+                server.add_flags(uid, [b"\\Seen"])
+
+
+if __name__ == "__main__":
+    run()
