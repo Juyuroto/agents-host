@@ -42,7 +42,7 @@ def diagnose_repo(data: dict) -> dict:
                 }
             ],
         )
-        raw = response.content[0].text
+        raw = "".join(b.text for b in response.content if b.type == "text")
         return json.loads(_extract_json(raw))
     except (APIError, json.JSONDecodeError):
         log.exception("Erreur lors de l'analyse du dépôt")
