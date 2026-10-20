@@ -3,3 +3,8 @@ services:
     build: ./agent-mail
     env_file: .env
     restart: unless-stopped
+
+  agent-devis:
+    build: ./agent-devis
+    env_file: .env
+    restart: unless-stopped
