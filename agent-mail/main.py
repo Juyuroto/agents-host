@@ -5,6 +5,7 @@ from config import IMAP_SERVER, IMAP_USER, IMAP_PASSWORD
 from mailbox import parse_message
 from classifier import classify_email
 from notifier import notify_discord
+from organizer import move_to_folder
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("agent-mail")
