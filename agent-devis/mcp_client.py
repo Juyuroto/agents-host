@@ -6,7 +6,7 @@ from mcp.client.streamable_http import streamable_http_client, create_mcp_http_c
 
 log = logging.getLogger("agent-devis")
 
-ALLOWED_TOOLS = frozenset({"get-customers", "get-billings", "get-billing-by-id", "create-estimate"})
+ALLOWED_TOOLS = frozenset({"get-customers", "create-customer", "get-billings", "get-billing-by-id", "create-estimate"})
 
 
 def is_allowed(name: str) -> bool:

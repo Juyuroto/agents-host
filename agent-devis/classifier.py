@@ -26,7 +26,8 @@ Pose la question.
 - TVA, durée de validité et conditions de paiement : celles des fichiers ci-dessous, jamais supposées.
 
 Abby, brouillon uniquement :
-- Cherche le client avec get-customers. Absent : signale-le, il sera créé par l'utilisateur.
+- Cherche le client avec get-customers, avant tout. Si un client au nom proche existe, utilise-le et signale-le : ne crée jamais de doublon.
+- Absent : crée-le avec create-customer seulement si la demande donne son nom, son adresse et son mail. Sinon, ne crée rien et pose la question.
 - Crée le devis avec create-estimate : il reste en brouillon.
 - Montants en centimes d'euro (100,00 EUR = 10000). Codes TVA : fr_20, fr_10, fr_5_5, fr_2_1, fr_0, fr_not_applicable.
 - Jamais de finalisation, d'envoi, de signature, de facture ni de modification d'un document existant.
