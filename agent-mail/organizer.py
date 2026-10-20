@@ -20,6 +20,12 @@ def move_to_folder(server: IMAPClient, uid: int, folder: str) -> None:
 
     try:
         ensure_folder_exists(server, folder)
-        server.move([uid], folder)
+        if b"MOVE" in server.capabilities():
+            server.move([uid], folder)
+        else:
+            # shortcut: expunge supprime tous les \Deleted de INBOX, pas seulement ce mail, à revoir si d'autres flux les utilisent
+            server.copy([uid], folder)
+            server.delete_messages([uid])
+            server.expunge()
     except IMAPClientError:
         log.exception("Échec du déplacement du mail uid=%s vers %s", uid, folder)
