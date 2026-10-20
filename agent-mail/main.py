@@ -15,8 +15,15 @@ def process_message(server: IMAPClient, uid: int) -> None:
     mail = parse_message(raw)
     log.info("Nouveau mail de %s — %s", mail["sender"], mail["subject"])
 
-    summary = classify_email(mail["sender"], mail["subject"], mail["body"])
-    notify_discord(mail["sender"], mail["subject"], summary)
+    result = classify_email(mail["sender"], mail["subject"], mail["body"])
+    notify_discord(
+        mail["sender"],
+        mail["subject"],
+        result["summary"],
+        result["urgency"],
+        result["folder"],
+    )
+    move_to_folder(server, uid, result["folder"])
 
 
 def run() -> None:
