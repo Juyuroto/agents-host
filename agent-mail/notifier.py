@@ -7,8 +7,14 @@ log = logging.getLogger("agent-mail")
 MAX_DISCORD_LEN = 1900
 
 
-def notify_discord(sender: str, subject: str, summary: str) -> None:
-    content = f"**Nouveau mail** de `{sender}`\n**Sujet :** {subject}\n\n{summary}"
+def notify_discord(sender: str, subject: str, summary: str, urgency: str, folder: str) -> None:
+    content = (
+        f"**Nouveau mail** de `{sender}`\n"
+        f"**Sujet :** {subject}\n\n"
+        f"**Résumé :** {summary}\n\n"
+        f"**Urgence :** {urgency}\n\n"
+        f"**Folder :** {folder}"
+    )
     content = content[:MAX_DISCORD_LEN]
 
     try:
