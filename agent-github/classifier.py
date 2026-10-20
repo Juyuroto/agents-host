@@ -19,6 +19,7 @@ SYSTEM_PROMPT = (
     '{"statut": "À jour" | "À surveiller" | "Inactif" | "Sans README", '
     '"observations": ["..."], '
     '"suggestions": [{"action": "...", "justification": "..."}]}'
+    " Au plus 3 observations et 3 suggestions."
 )
 
 
@@ -33,7 +34,7 @@ def diagnose_repo(data: dict) -> dict:
     try:
         response = claude.messages.create(
             model="claude-haiku-5-5",
-            max_tokens=800,
+            max_tokens=2000,
             system=SYSTEM_PROMPT,
             messages=[
                 {
