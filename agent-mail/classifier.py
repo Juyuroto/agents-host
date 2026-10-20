@@ -1,5 +1,5 @@
-# classifier.py
 import json
+import re
 import logging
 from anthropic import Anthropic, APIError
 from config import ANTHROPIC_API_KEY
@@ -10,7 +10,8 @@ claude = Anthropic(api_key=ANTHROPIC_API_KEY)
 
 SYSTEM_PROMPT = (
     "Tu es un agent qui analyse des mails reçus pour une entreprise de support IT (SafOps). "
-    "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, au format exact :\n"
+    "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, "
+    "au format exact :\n"
     '{"summary": "résumé en 2-3 lignes en français", '
     '"urgency": "Faible" | "Moyenne" | "Haute", '
     '"folder": "Urgent" | "Admin" | "Clients" | "Factures" | "Fournisseurs" | "Pub"}\n'
@@ -22,6 +23,14 @@ SYSTEM_PROMPT = (
 )
 
 MAX_BODY_CHARS = 3000
+
+
+def _extract_json(raw: str) -> str:
+
+    cleaned = raw.strip()
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+    return cleaned.strip()
 
 
 def classify_email(sender: str, subject: str, body: str) -> dict:
@@ -40,7 +49,7 @@ def classify_email(sender: str, subject: str, body: str) -> dict:
             ],
         )
         raw = response.content[0].text
-        return json.loads(raw)
+        return json.loads(_extract_json(raw))
     except (APIError, json.JSONDecodeError):
         log.exception("Erreur lors de la classification du mail")
         return {
