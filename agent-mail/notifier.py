@@ -1,6 +1,6 @@
 import logging
 import requests
-from config import DISCORD_WEBHOOK_URL
+from config import DISCORD_MAIL_WEBHOOK_URL
 
 log = logging.getLogger("agent-mail")
 
@@ -12,7 +12,7 @@ def notify_discord(sender: str, subject: str, summary: str) -> None:
     content = content[:MAX_DISCORD_LEN]
 
     try:
-        r = requests.post(DISCORD_WEBHOOK_URL, json={"content": content}, timeout=10)
+        r = requests.post(DISCORD_MAIL_WEBHOOK_URL, json={"content": content}, timeout=10)
         r.raise_for_status()
     except requests.RequestException:
         log.exception("Échec de l'envoi de la notification Discord")
