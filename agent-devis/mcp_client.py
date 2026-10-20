@@ -27,7 +27,6 @@ def to_anthropic_tools(mcp_tools) -> list[dict]:
 
 @asynccontextmanager
 async def abby_session():
-    # import tardif : config exige les variables d'environnement, pas le test de la liste blanche
     from config import ABBY_MCP_URL, ABBY_MCP_TOKEN
 
     http_client = create_mcp_http_client(headers={"Authorization": f"Bearer {ABBY_MCP_TOKEN}"})
@@ -44,7 +43,6 @@ async def list_allowed_tools(session) -> list[dict]:
 
 
 async def call_tool(session, name: str, arguments: dict) -> tuple[str, bool]:
-    """Retourne (texte, is_error). Ne lève pas : l'erreur est renvoyée au modèle."""
     if not is_allowed(name):
         log.warning("Outil refusé : %s", name)
         return f"Outil non autorisé : {name}", True

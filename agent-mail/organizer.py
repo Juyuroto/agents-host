@@ -23,7 +23,6 @@ def move_to_folder(server: IMAPClient, uid: int, folder: str) -> None:
         if b"MOVE" in server.capabilities():
             server.move([uid], folder)
         else:
-            # shortcut: expunge supprime tous les \Deleted de INBOX, pas seulement ce mail, à revoir si d'autres flux les utilisent
             server.copy([uid], folder)
             server.delete_messages([uid])
             server.expunge()
