@@ -1,2 +1,1 @@
-TZ=Europe/Paris
 0 8 * * 1 cd /opt/agents-host && docker compose run --rm agent-techwatch >> /var/log/agent-techwatch.log 2>&1

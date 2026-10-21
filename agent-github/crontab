@@ -1,2 +1,1 @@
-TZ=Europe/Paris
 30 9 * * * cd /opt/agents-host && docker compose run --rm agent-github >> /var/log/agent-github.log 2>&1
