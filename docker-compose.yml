@@ -21,3 +21,10 @@ services:
   agent-techwatch:
     build: ./agent-techwatch
     env_file: .env
+
+  agent-assistant:
+    build: ./agent-assistant
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ./agent-assistant/data:/app/data
