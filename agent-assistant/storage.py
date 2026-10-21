@@ -33,16 +33,15 @@ def init_db() -> None:
     )
     _ensure_column("reminders", "recurrence", "TEXT")
     _query(
-        "CREATE TABLE IF NOT EXISTS agenda ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "texte TEXT NOT NULL, "
-        "date_heure TEXT NOT NULL)"
-    )
-    _query(
         "CREATE TABLE IF NOT EXISTS notes ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "texte TEXT NOT NULL, "
         "cree_le TEXT NOT NULL)"
+    )
+    _query(
+        "CREATE TABLE IF NOT EXISTS meta ("
+        "cle TEXT PRIMARY KEY, "
+        "valeur TEXT NOT NULL)"
     )
 
 
@@ -98,10 +97,6 @@ def update_reminder(reminder_id: int, texte: str | None = None, echeance: str | 
     return True
 
 
-def add_agenda_item(texte: str, date_heure: str) -> None:
-    _query("INSERT INTO agenda (texte, date_heure) VALUES (?, ?)", (texte, date_heure))
-
-
 def add_note(texte: str, cree_le: str) -> None:
     _query("INSERT INTO notes (texte, cree_le) VALUES (?, ?)", (texte, cree_le))
 
@@ -111,3 +106,12 @@ def search_notes(mot: str) -> list[dict]:
         "SELECT texte, cree_le FROM notes WHERE texte LIKE ? ORDER BY cree_le DESC",
         (f"%{mot}%",),
     )
+
+
+def get_meta(cle: str) -> str | None:
+    rows = _query("SELECT valeur FROM meta WHERE cle = ?", (cle,))
+    return rows[0]["valeur"] if rows else None
+
+
+def set_meta(cle: str, valeur: str) -> None:
+    _query("INSERT OR REPLACE INTO meta (cle, valeur) VALUES (?, ?)", (cle, valeur))

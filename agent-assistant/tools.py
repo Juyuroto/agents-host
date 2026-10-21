@@ -61,7 +61,7 @@ TOOLS = [
     },
     {
         "name": "add_agenda_item",
-        "description": "Ajoute un élément à l'emploi du temps.",
+        "description": "Ajoute un événement d'une heure à l'agenda Apple. Pour « tous les lundis », donne le prochain lundi et recurrence hebdomadaire.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -70,8 +70,29 @@ TOOLS = [
                     "type": "string",
                     "description": "Date et heure ISO 8601, ex. 2026-10-21T14:00:00 (heure de Paris si sans fuseau)",
                 },
+                "recurrence": {
+                    "type": "string",
+                    "enum": list(storage.RECURRENCES),
+                    "description": "Optionnel : répétition de l'événement",
+                },
             },
             "required": ["texte", "date_heure"],
+        },
+    },
+    {
+        "name": "update_agenda_item",
+        "description": "Modifie le texte et/ou la date d'un événement de l'agenda Apple à partir de son url (obtenue avec list_agenda_items).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string"},
+                "texte": {"type": "string"},
+                "date_heure": {
+                    "type": "string",
+                    "description": "Date et heure ISO 8601 (heure de Paris si sans fuseau)",
+                },
+            },
+            "required": ["url"],
         },
     },
     {
@@ -94,7 +115,7 @@ TOOLS = [
     },
     {
         "name": "list_agenda_items",
-        "description": "Liste les événements de l'agenda Apple entre deux dates. Renvoie leur url, nécessaire pour les supprimer.",
+        "description": "Liste les événements de l'agenda Apple entre deux dates. Renvoie leur url, nécessaire pour les modifier ou les supprimer.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -161,14 +182,15 @@ def execute(name: str, args: dict) -> str:
                 return "Rappel modifié."
             return "Rappel introuvable ou déjà envoyé."
         if name == "add_agenda_item":
-            debut = _to_utc(args["date_heure"])
-            storage.add_agenda_item(args["texte"], debut)
-            try:
-                apple_calendar.add_event(args["texte"], debut)
-            except Exception:
-                log.exception("Échec de l'envoi vers Apple Agenda")
-                return "Ajouté à la base, mais échec de l'envoi vers Apple Agenda."
-            return "Ajouté à l'agenda et à Apple Agenda."
+            recurrence = args.get("recurrence")
+            if recurrence is not None and recurrence not in storage.RECURRENCES:
+                return f"Récurrence inconnue : {recurrence}"
+            apple_calendar.add_event(args["texte"], _to_utc(args["date_heure"]), recurrence)
+            return "Ajouté à l'agenda Apple."
+        if name == "update_agenda_item":
+            date_heure = _to_utc(args["date_heure"]) if "date_heure" in args else None
+            apple_calendar.update_event(args["url"], args.get("texte"), date_heure)
+            return "Événement modifié."
         if name == "add_note":
             storage.add_note(args["texte"], _now_utc())
             return "Note enregistrée."
