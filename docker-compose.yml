@@ -12,3 +12,7 @@ services:
   agent-github:
     build: ./agent-github
     env_file: .env
+
+  agent-techwatch:
+    build: ./agent-techwatch
+    env_file: .env
