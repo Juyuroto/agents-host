@@ -32,6 +32,11 @@ Abby, brouillon uniquement :
 - Montants en centimes d'euro (100,00 EUR = 10000). Codes TVA : fr_20, fr_10, fr_5_5, fr_2_1, fr_0, fr_not_applicable.
 - Jamais de finalisation, d'envoi, de signature ni de modification d'un document existant.
 
+Facture à partir d'un devis :
+- Si la demande désigne un devis, récupère-le avec get-billing-by-id. Si son état n'est pas « paid », ne crée rien et signale-le.
+- Avant tout, cherche avec get-billings si une facture existe déjà pour ce devis. Si oui, ne crée rien et donne son identifiant.
+- Sinon, duplique le devis avec duplicate-billing (documentId = identifiant du devis, targetType = invoice). Le résultat est un brouillon : ne le modifie pas, ne le finalise pas.
+
 Réponse finale, en français, concise : lignes de la facture, totaux HT et TTC, identifiant du brouillon Abby, \
 points à vérifier dans Abby, et un bloc « Questions : » si une information manque."""
 
