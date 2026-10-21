@@ -14,7 +14,7 @@ def _require(name: str) -> str:
 
 
 DISCORD_BOT_TOKEN = _require("DISCORD_BOT_TOKEN")
-DISCORD_CHANNEL_ID = int(_require("DISCORD_CHANNEL_ID"))
+DISCORD_ASSISTANT_CHANNEL_ID = int(_require("DISCORD_ASSISTANT_CHANNEL_ID"))
 ANTHROPIC_API_KEY = _require("ANTHROPIC_API_KEY")
 DB_PATH = str(Path(__file__).parent / "data" / "assistant.db")
 TIMEZONE = ZoneInfo("Europe/Paris")

@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timezone
 
 import storage
-from config import DISCORD_CHANNEL_ID
+from config import DISCORD_ASSISTANT_CHANNEL_ID
 
 log = logging.getLogger("agent-assistant")
 
@@ -13,7 +13,7 @@ async def run_scheduler(client) -> None:
     while True:
         try:
             now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-            channel = client.get_channel(DISCORD_CHANNEL_ID)
+            channel = client.get_channel(DISCORD_ASSISTANT_CHANNEL_ID)
             for rappel in storage.due_reminders(now):
                 try:
                     await channel.send(f"Rappel : {rappel['texte']}")
