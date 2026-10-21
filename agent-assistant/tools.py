@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
+import apple_calendar
 import storage
 from config import TIMEZONE
 
@@ -139,8 +140,14 @@ def execute(name: str, args: dict) -> str:
                 return "Rappel modifié."
             return "Rappel introuvable ou déjà envoyé."
         if name == "add_agenda_item":
-            storage.add_agenda_item(args["texte"], _to_utc(args["date_heure"]))
-            return "Ajouté à l'agenda."
+            debut = _to_utc(args["date_heure"])
+            storage.add_agenda_item(args["texte"], debut)
+            try:
+                apple_calendar.add_event(args["texte"], debut)
+            except Exception:
+                log.exception("Échec de l'envoi vers Apple Agenda")
+                return "Ajouté à la base, mais échec de l'envoi vers Apple Agenda."
+            return "Ajouté à l'agenda et à Apple Agenda."
         if name == "add_note":
             storage.add_note(args["texte"], _now_utc())
             return "Note enregistrée."

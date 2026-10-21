@@ -1,3 +1,4 @@
 anthropic
+caldav
 discord.py
 python-dotenv
