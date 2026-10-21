@@ -19,7 +19,8 @@ SYSTEM_PROMPT = (
     '{"statut": "À jour" | "À surveiller" | "Inactif" | "Sans README", '
     '"observations": ["..."], '
     '"suggestions": [{"action": "...", "justification": "..."}]}'
-    " Au plus 3 observations et 3 suggestions."
+    " Sois bref : au plus 1 observation et 1 suggestion concrète, une phrase chacune. "
+    "Si le dépôt est sain, laisse suggestions vide."
 )
 
 

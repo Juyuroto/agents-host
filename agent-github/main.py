@@ -32,6 +32,8 @@ def run() -> None:
             log.info("Analyse de %s", name)
             data = analyze_repo_data(repo)
             diag = diagnose_repo(data)
+            if diag["statut"] == "À jour" and not diag["suggestions"]:
+                continue
             sections.append(format_section(name, diag))
         except Exception:
             log.exception("Erreur sur %s", name)
