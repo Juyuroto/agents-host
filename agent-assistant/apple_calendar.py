@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import caldav
+import requests
+from requests.auth import HTTPBasicAuth
 from config import APPLE_ID, APPLE_APP_PASSWORD, TIMEZONE
 
 CALDAV_URL = "https://caldav.icloud.com"
@@ -59,4 +61,5 @@ def list_events(debut_utc: str, fin_utc: str) -> list[dict]:
 
 
 def delete_event(url: str) -> None:
-    caldav.Event(_client(), url=url).delete()
+    r = requests.delete(url, auth=HTTPBasicAuth(APPLE_ID, APPLE_APP_PASSWORD), timeout=15)
+    r.raise_for_status()
