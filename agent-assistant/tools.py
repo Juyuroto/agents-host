@@ -94,7 +94,7 @@ TOOLS = [
     },
     {
         "name": "list_agenda_items",
-        "description": "Liste les événements de l'agenda Apple entre deux dates. Renvoie leur uid, utile pour les supprimer.",
+        "description": "Liste les événements de l'agenda Apple entre deux dates. Renvoie leur url, nécessaire pour les supprimer.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -106,11 +106,11 @@ TOOLS = [
     },
     {
         "name": "delete_agenda_item",
-        "description": "Supprime un événement de l'agenda Apple à partir de son uid (obtenu avec list_agenda_items).",
+        "description": "Supprime un événement de l'agenda Apple à partir de son url (obtenue avec list_agenda_items).",
         "input_schema": {
             "type": "object",
-            "properties": {"uid": {"type": "string"}},
-            "required": ["uid"],
+            "properties": {"url": {"type": "string"}},
+            "required": ["url"],
         },
     },
 ]
@@ -186,7 +186,7 @@ def execute(name: str, args: dict) -> str:
                 return "Aucun événement sur cette période."
             return json.dumps(events, ensure_ascii=False)
         if name == "delete_agenda_item":
-            apple_calendar.delete_event(args["uid"])
+            apple_calendar.delete_event(args["url"])
             return "Événement supprimé."
         return f"Outil inconnu : {name}"
     except Exception as e:

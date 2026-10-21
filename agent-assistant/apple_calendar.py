@@ -30,9 +30,12 @@ def _ical(texte: str, debut: datetime) -> str:
     ])
 
 
+def _client() -> caldav.DAVClient:
+    return caldav.DAVClient(url=CALDAV_URL, username=APPLE_ID, password=APPLE_APP_PASSWORD)
+
+
 def _calendar():
-    client = caldav.DAVClient(url=CALDAV_URL, username=APPLE_ID, password=APPLE_APP_PASSWORD)
-    return client.principal().calendars()[0]
+    return _client().principal().calendars()[0]
 
 
 def add_event(texte: str, debut_utc: str) -> None:
@@ -48,11 +51,12 @@ def list_events(debut_utc: str, fin_utc: str) -> list[dict]:
         composant = event.icalendar_component
         events.append({
             "uid": str(composant["uid"]),
+            "url": str(event.url),
             "texte": str(composant.get("summary", "")),
             "debut": composant["dtstart"].dt.astimezone(TIMEZONE).isoformat(timespec="minutes"),
         })
     return events
 
 
-def delete_event(uid: str) -> None:
-    _calendar().event_by_uid(uid).delete()
+def delete_event(url: str) -> None:
+    caldav.Event(_client(), url=url).delete()
