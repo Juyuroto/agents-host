@@ -11,7 +11,7 @@ log = logging.getLogger("agent-assistant")
 TOOLS = [
     {
         "name": "set_reminder",
-        "description": "Crée un rappel, posté sur Discord à l'échéance. Pour « tous les lundis », donne l'échéance du prochain lundi et recurrence hebdomadaire.",
+        "description": "Crée un rappel. Il est posté sur Discord à l'échéance, puis relancé (10 min, 30 min, 2 h…) tant que l'utilisateur n'a pas dit « fait N ».",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -19,11 +19,6 @@ TOOLS = [
                 "echeance": {
                     "type": "string",
                     "description": "Date et heure ISO 8601, ex. 2026-10-21T14:00:00 (heure de Paris si sans fuseau)",
-                },
-                "recurrence": {
-                    "type": "string",
-                    "enum": list(storage.RECURRENCES),
-                    "description": "Optionnel : répétition du rappel",
                 },
             },
             "required": ["texte", "echeance"],
@@ -35,27 +30,11 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
-        "name": "cancel_reminder",
-        "description": "Annule un rappel en attente à partir de son identifiant.",
+        "name": "mark_reminder_done",
+        "description": "Marque un rappel comme fait : il ne sera plus envoyé ni relancé. À utiliser quand l'utilisateur écrit « fait N ».",
         "input_schema": {
             "type": "object",
             "properties": {"id": {"type": "integer"}},
-            "required": ["id"],
-        },
-    },
-    {
-        "name": "update_reminder",
-        "description": "Modifie le texte et/ou l'échéance d'un rappel en attente à partir de son identifiant.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "id": {"type": "integer"},
-                "texte": {"type": "string"},
-                "echeance": {
-                    "type": "string",
-                    "description": "Date et heure ISO 8601 (heure de Paris si sans fuseau)",
-                },
-            },
             "required": ["id"],
         },
     },
@@ -72,7 +51,7 @@ TOOLS = [
                 },
                 "recurrence": {
                     "type": "string",
-                    "enum": list(storage.RECURRENCES),
+                    "enum": list(apple_calendar.RRULE_FREQ),
                     "description": "Optionnel : répétition de l'événement",
                 },
             },
@@ -93,33 +72,6 @@ TOOLS = [
                 },
             },
             "required": ["url"],
-        },
-    },
-    {
-        "name": "mark_reminder_done",
-        "description": "Marque un rappel comme fait : il ne sera plus envoyé, y compris s'il est répété. À utiliser quand l'utilisateur dit qu'il a fait ce qu'on lui rappelait.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"id": {"type": "integer"}},
-            "required": ["id"],
-        },
-    },
-    {
-        "name": "add_note",
-        "description": "Enregistre une note rapide.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"texte": {"type": "string"}},
-            "required": ["texte"],
-        },
-    },
-    {
-        "name": "search_notes",
-        "description": "Cherche les notes contenant un mot.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"mot": {"type": "string"}},
-            "required": ["mot"],
         },
     },
     {
@@ -153,17 +105,10 @@ def _to_utc(value: str) -> str:
     return dt.astimezone(timezone.utc).isoformat(timespec="seconds")
 
 
-def _now_utc() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
-
-
 def execute(name: str, args: dict) -> str:
     try:
         if name == "set_reminder":
-            recurrence = args.get("recurrence")
-            if recurrence is not None and recurrence not in storage.RECURRENCES:
-                return f"Récurrence inconnue : {recurrence}"
-            storage.add_reminder(args["texte"], _to_utc(args["echeance"]), recurrence)
+            storage.add_reminder(args["texte"], _to_utc(args["echeance"]))
             return "Rappel enregistré."
         if name == "list_reminders":
             rows = storage.list_pending_reminders()
@@ -175,24 +120,19 @@ def execute(name: str, args: dict) -> str:
                         "id": r["id"],
                         "texte": r["texte"],
                         "echeance": datetime.fromisoformat(r["echeance"]).astimezone(TIMEZONE).isoformat(timespec="minutes"),
-                        "recurrence": r["recurrence"],
+                        "relances": r["relances"],
                     }
                     for r in rows
                 ],
                 ensure_ascii=False,
             )
-        if name == "cancel_reminder":
-            if storage.cancel_reminder(int(args["id"])):
-                return "Rappel annulé."
-            return "Rappel introuvable ou déjà envoyé."
-        if name == "update_reminder":
-            echeance = _to_utc(args["echeance"]) if "echeance" in args else None
-            if storage.update_reminder(int(args["id"]), args.get("texte"), echeance):
-                return "Rappel modifié."
-            return "Rappel introuvable ou déjà envoyé."
+        if name == "mark_reminder_done":
+            if storage.complete_reminder(int(args["id"])):
+                return "Rappel marqué comme fait."
+            return "Rappel introuvable ou déjà fait."
         if name == "add_agenda_item":
             recurrence = args.get("recurrence")
-            if recurrence is not None and recurrence not in storage.RECURRENCES:
+            if recurrence is not None and recurrence not in apple_calendar.RRULE_FREQ:
                 return f"Récurrence inconnue : {recurrence}"
             apple_calendar.add_event(args["texte"], _to_utc(args["date_heure"]), recurrence)
             return "Ajouté à l'agenda Apple."
@@ -200,21 +140,6 @@ def execute(name: str, args: dict) -> str:
             date_heure = _to_utc(args["date_heure"]) if "date_heure" in args else None
             apple_calendar.update_event(args["url"], args.get("texte"), date_heure)
             return "Événement modifié."
-        if name == "mark_reminder_done":
-            if storage.complete_reminder(int(args["id"])):
-                return "Rappel marqué comme fait."
-            return "Rappel introuvable ou déjà terminé."
-        if name == "add_note":
-            storage.add_note(args["texte"], _now_utc())
-            return "Note enregistrée."
-        if name == "search_notes":
-            rows = storage.search_notes(args["mot"])
-            if not rows:
-                return "Aucune note trouvée."
-            return json.dumps(
-                [{"texte": r["texte"], "date": r["cree_le"]} for r in rows],
-                ensure_ascii=False,
-            )
         if name == "list_agenda_items":
             events = apple_calendar.list_events(_to_utc(args["debut"]), _to_utc(args["fin"]))
             if not events:

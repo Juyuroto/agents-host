@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from config import DB_PATH
 
-RECURRENCES = {"quotidien": timedelta(days=1), "hebdomadaire": timedelta(weeks=1)}
+DELAIS_RELANCE = [timedelta(minutes=10), timedelta(minutes=30), timedelta(hours=2)]
 
 
 def _query(sql: str, params: tuple = ()) -> list[dict]:
@@ -31,30 +31,16 @@ def init_db() -> None:
         "echeance TEXT NOT NULL, "
         "statut TEXT NOT NULL DEFAULT 'en_attente')"
     )
-    _ensure_column("reminders", "recurrence", "TEXT")
-    _query(
-        "CREATE TABLE IF NOT EXISTS notes ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "texte TEXT NOT NULL, "
-        "cree_le TEXT NOT NULL)"
-    )
-    _query(
-        "CREATE TABLE IF NOT EXISTS meta ("
-        "cle TEXT PRIMARY KEY, "
-        "valeur TEXT NOT NULL)"
-    )
+    _ensure_column("reminders", "relances", "INTEGER NOT NULL DEFAULT 0")
 
 
-def add_reminder(texte: str, echeance: str, recurrence: str | None = None) -> None:
-    _query(
-        "INSERT INTO reminders (texte, echeance, recurrence) VALUES (?, ?, ?)",
-        (texte, echeance, recurrence),
-    )
+def add_reminder(texte: str, echeance: str) -> None:
+    _query("INSERT INTO reminders (texte, echeance) VALUES (?, ?)", (texte, echeance))
 
 
 def list_pending_reminders() -> list[dict]:
     return _query(
-        "SELECT id, texte, echeance, recurrence FROM reminders WHERE statut = 'en_attente' ORDER BY echeance"
+        "SELECT id, texte, echeance, relances FROM reminders WHERE statut = 'en_attente' ORDER BY echeance"
     )
 
 
@@ -65,26 +51,13 @@ def due_reminders(now: str) -> list[dict]:
 
 
 def mark_sent(reminder_id: int, now: str) -> None:
-    row = _query("SELECT echeance, recurrence FROM reminders WHERE id = ?", (reminder_id,))[0]
-    if row["recurrence"] is None:
-        _query("UPDATE reminders SET statut = 'envoye' WHERE id = ?", (reminder_id,))
-        return
-    delta = RECURRENCES[row["recurrence"]]
-    echeance = datetime.fromisoformat(row["echeance"])
-    now_dt = datetime.fromisoformat(now)
-    while echeance <= now_dt:
-        echeance += delta
+    relances = _query("SELECT relances FROM reminders WHERE id = ?", (reminder_id,))[0]["relances"] + 1
+    delai = DELAIS_RELANCE[min(relances - 1, len(DELAIS_RELANCE) - 1)]
+    prochaine = datetime.fromisoformat(now) + delai
     _query(
-        "UPDATE reminders SET echeance = ? WHERE id = ?",
-        (echeance.isoformat(timespec="seconds"), reminder_id),
+        "UPDATE reminders SET echeance = ?, relances = ? WHERE id = ?",
+        (prochaine.isoformat(timespec="seconds"), relances, reminder_id),
     )
-
-
-def cancel_reminder(reminder_id: int) -> bool:
-    if not _query("SELECT id FROM reminders WHERE id = ? AND statut = 'en_attente'", (reminder_id,)):
-        return False
-    _query("UPDATE reminders SET statut = 'annule' WHERE id = ?", (reminder_id,))
-    return True
 
 
 def complete_reminder(reminder_id: int) -> bool:
@@ -92,33 +65,3 @@ def complete_reminder(reminder_id: int) -> bool:
         return False
     _query("UPDATE reminders SET statut = 'fait' WHERE id = ?", (reminder_id,))
     return True
-
-
-def update_reminder(reminder_id: int, texte: str | None = None, echeance: str | None = None) -> bool:
-    if not _query("SELECT id FROM reminders WHERE id = ? AND statut = 'en_attente'", (reminder_id,)):
-        return False
-    if texte is not None:
-        _query("UPDATE reminders SET texte = ? WHERE id = ?", (texte, reminder_id))
-    if echeance is not None:
-        _query("UPDATE reminders SET echeance = ? WHERE id = ?", (echeance, reminder_id))
-    return True
-
-
-def add_note(texte: str, cree_le: str) -> None:
-    _query("INSERT INTO notes (texte, cree_le) VALUES (?, ?)", (texte, cree_le))
-
-
-def search_notes(mot: str) -> list[dict]:
-    return _query(
-        "SELECT texte, cree_le FROM notes WHERE texte LIKE ? ORDER BY cree_le DESC",
-        (f"%{mot}%",),
-    )
-
-
-def get_meta(cle: str) -> str | None:
-    rows = _query("SELECT valeur FROM meta WHERE cle = ?", (cle,))
-    return rows[0]["valeur"] if rows else None
-
-
-def set_meta(cle: str, valeur: str) -> None:
-    _query("INSERT OR REPLACE INTO meta (cle, valeur) VALUES (?, ?)", (cle, valeur))
