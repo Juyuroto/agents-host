@@ -96,6 +96,15 @@ TOOLS = [
         },
     },
     {
+        "name": "mark_reminder_done",
+        "description": "Marque un rappel comme fait : il ne sera plus envoyé, y compris s'il est répété. À utiliser quand l'utilisateur dit qu'il a fait ce qu'on lui rappelait.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"id": {"type": "integer"}},
+            "required": ["id"],
+        },
+    },
+    {
         "name": "add_note",
         "description": "Enregistre une note rapide.",
         "input_schema": {
@@ -191,6 +200,10 @@ def execute(name: str, args: dict) -> str:
             date_heure = _to_utc(args["date_heure"]) if "date_heure" in args else None
             apple_calendar.update_event(args["url"], args.get("texte"), date_heure)
             return "Événement modifié."
+        if name == "mark_reminder_done":
+            if storage.complete_reminder(int(args["id"])):
+                return "Rappel marqué comme fait."
+            return "Rappel introuvable ou déjà terminé."
         if name == "add_note":
             storage.add_note(args["texte"], _now_utc())
             return "Note enregistrée."

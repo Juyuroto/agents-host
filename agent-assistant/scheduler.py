@@ -41,7 +41,7 @@ async def run_scheduler(client) -> None:
             channel = client.get_channel(DISCORD_ASSISTANT_CHANNEL_ID)
             for rappel in storage.due_reminders(now):
                 try:
-                    await channel.send(f"Rappel : {rappel['texte']}")
+                    await channel.send(f"Rappel #{rappel['id']} : {rappel['texte']} (écris « fait {rappel['id']} » une fois fait)")
                     storage.mark_sent(rappel["id"], now)
                 except Exception:
                     log.exception("Échec de l'envoi du rappel %s", rappel["id"])

@@ -87,6 +87,13 @@ def cancel_reminder(reminder_id: int) -> bool:
     return True
 
 
+def complete_reminder(reminder_id: int) -> bool:
+    if not _query("SELECT id FROM reminders WHERE id = ? AND statut = 'en_attente'", (reminder_id,)):
+        return False
+    _query("UPDATE reminders SET statut = 'fait' WHERE id = ?", (reminder_id,))
+    return True
+
+
 def update_reminder(reminder_id: int, texte: str | None = None, echeance: str | None = None) -> bool:
     if not _query("SELECT id FROM reminders WHERE id = ? AND statut = 'en_attente'", (reminder_id,)):
         return False
