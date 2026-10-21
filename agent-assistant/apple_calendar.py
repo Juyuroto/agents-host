@@ -15,8 +15,8 @@ def _escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
 
 
-def _ical(texte: str, debut: datetime, recurrence: str | None = None) -> str:
-    fin = debut + timedelta(hours=1)
+def _ical(texte: str, debut: datetime, recurrence: str | None = None, duree: timedelta = timedelta(hours=1)) -> str:
+    fin = debut + duree
     now = datetime.now(timezone.utc)
     lignes = [
         "BEGIN:VCALENDAR",
@@ -43,9 +43,9 @@ def _calendar():
     return _client().principal().calendars()[0]
 
 
-def add_event(texte: str, debut_utc: str, recurrence: str | None = None) -> None:
+def add_event(texte: str, debut_utc: str, recurrence: str | None = None, duree_minutes: int = 60) -> None:
     debut = datetime.fromisoformat(debut_utc).astimezone(timezone.utc)
-    _calendar().save_event(_ical(texte, debut, recurrence))
+    _calendar().save_event(_ical(texte, debut, recurrence, timedelta(minutes=duree_minutes)))
 
 
 def list_events(debut_utc: str, fin_utc: str) -> list[dict]:
@@ -63,12 +63,23 @@ def list_events(debut_utc: str, fin_utc: str) -> list[dict]:
     return events
 
 
+def _duree_originale(lignes: list[str]) -> timedelta:
+    valeurs = {ligne.split(":", 1)[0].split(";")[0]: ligne.split(":", 1)[1] for ligne in lignes if ligne.startswith(("DTSTART", "DTEND"))}
+    try:
+        debut = datetime.strptime(valeurs["DTSTART"].rstrip("Z"), "%Y%m%dT%H%M%S")
+        fin = datetime.strptime(valeurs["DTEND"].rstrip("Z"), "%Y%m%dT%H%M%S")
+        return fin - debut
+    except (KeyError, ValueError):
+        return timedelta(hours=1)
+
+
 def update_event(url: str, texte: str | None, debut_utc: str | None) -> None:
     auth = HTTPBasicAuth(APPLE_ID, APPLE_APP_PASSWORD)
     r = requests.get(url, auth=auth, timeout=15)
     r.raise_for_status()
     lignes = r.text.replace("\r\n ", "").replace("\n ", "").replace("\r\n", "\n").split("\n")
     debut = datetime.fromisoformat(debut_utc).astimezone(timezone.utc) if debut_utc else None
+    duree = _duree_originale(lignes)
     sortie = []
     for ligne in lignes:
         if texte is not None and ligne.startswith("SUMMARY"):
@@ -78,7 +89,7 @@ def update_event(url: str, texte: str | None, debut_utc: str | None) -> None:
         if debut is not None and ligne == "END:VEVENT":
             sortie += [
                 f"DTSTART:{debut.strftime(ICAL_FORMAT)}",
-                f"DTEND:{(debut + timedelta(hours=1)).strftime(ICAL_FORMAT)}",
+                f"DTEND:{(debut + duree).strftime(ICAL_FORMAT)}",
             ]
         if ligne:
             sortie.append(ligne)

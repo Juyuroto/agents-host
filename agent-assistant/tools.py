@@ -54,6 +54,10 @@ TOOLS = [
                     "enum": list(apple_calendar.RRULE_FREQ),
                     "description": "Optionnel : répétition de l'événement",
                 },
+                "duree_minutes": {
+                    "type": "integer",
+                    "description": "Optionnel : durée en minutes (60 par défaut)",
+                },
             },
             "required": ["texte", "date_heure"],
         },
@@ -134,7 +138,7 @@ def execute(name: str, args: dict) -> str:
             recurrence = args.get("recurrence")
             if recurrence is not None and recurrence not in apple_calendar.RRULE_FREQ:
                 return f"Récurrence inconnue : {recurrence}"
-            apple_calendar.add_event(args["texte"], _to_utc(args["date_heure"]), recurrence)
+            apple_calendar.add_event(args["texte"], _to_utc(args["date_heure"]), recurrence, int(args.get("duree_minutes", 60)))
             return "Ajouté à l'agenda Apple."
         if name == "update_agenda_item":
             date_heure = _to_utc(args["date_heure"]) if "date_heure" in args else None
