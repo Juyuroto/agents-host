@@ -44,7 +44,7 @@ def list_events(debut_utc: str, fin_utc: str) -> list[dict]:
     debut = datetime.fromisoformat(debut_utc).astimezone(timezone.utc)
     fin = datetime.fromisoformat(fin_utc).astimezone(timezone.utc)
     events = []
-    for event in _calendar().date_search(start=debut, end=fin, expand=True):
+    for event in _calendar().date_search(start=debut, end=fin):
         composant = event.icalendar_component
         events.append({
             "uid": str(composant["uid"]),
