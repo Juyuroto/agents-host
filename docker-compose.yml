@@ -9,6 +9,11 @@ services:
     env_file: .env
     restart: unless-stopped
 
+  agent-factures:
+    build: ./agent-factures
+    env_file: .env
+    restart: unless-stopped
+
   agent-github:
     build: ./agent-github
     env_file: .env
