@@ -92,6 +92,27 @@ TOOLS = [
             "required": ["mot"],
         },
     },
+    {
+        "name": "list_agenda_items",
+        "description": "Liste les événements de l'agenda Apple entre deux dates. Renvoie leur uid, utile pour les supprimer.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "debut": {"type": "string", "description": "Date et heure ISO 8601 de début (heure de Paris si sans fuseau)"},
+                "fin": {"type": "string", "description": "Date et heure ISO 8601 de fin (heure de Paris si sans fuseau)"},
+            },
+            "required": ["debut", "fin"],
+        },
+    },
+    {
+        "name": "delete_agenda_item",
+        "description": "Supprime un événement de l'agenda Apple à partir de son uid (obtenu avec list_agenda_items).",
+        "input_schema": {
+            "type": "object",
+            "properties": {"uid": {"type": "string"}},
+            "required": ["uid"],
+        },
+    },
 ]
 
 
@@ -159,6 +180,14 @@ def execute(name: str, args: dict) -> str:
                 [{"texte": r["texte"], "date": r["cree_le"]} for r in rows],
                 ensure_ascii=False,
             )
+        if name == "list_agenda_items":
+            events = apple_calendar.list_events(_to_utc(args["debut"]), _to_utc(args["fin"]))
+            if not events:
+                return "Aucun événement sur cette période."
+            return json.dumps(events, ensure_ascii=False)
+        if name == "delete_agenda_item":
+            apple_calendar.delete_event(args["uid"])
+            return "Événement supprimé."
         return f"Outil inconnu : {name}"
     except Exception as e:
         log.exception("Erreur dans l'outil %s", name)
