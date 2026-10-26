@@ -11,6 +11,12 @@ from config import COMPTA_WEB_PASSWORD, COMPTA_WEB_USER
 
 PORT = 3000
 CSV_NAME = re.compile(r"[\w.-]+\.csv")
+DESCRIPTIONS = {
+    "depenses-2026.csv": "Toutes les dépenses de l'année, une ligne par dépense. Sert au résultat et à la TVA déductible.",
+    "recettes-2026.csv": "Toutes les recettes de l'année, une ligne par facture. Sert au chiffre d'affaires et à la TVA collectée.",
+    "budgets-2026.csv": "Budget prévu par catégorie et par mois. Sert à comparer le réalisé aux objectifs.",
+    "recurrents.csv": "Charges fixes (abonnements, loyers…) avec leur fréquence. Sert à prévoir les dépenses à venir.",
+}
 PAGE_HEAD = """<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><title>Compta SafOps</title>
 <style>
@@ -34,7 +40,8 @@ def _authorized(header: str | None) -> bool:
 
 def _index() -> str:
     items = "".join(
-        f'<li><a href="/{html.escape(p.name)}">{html.escape(p.name)}</a></li>'
+        f'<li><a href="/{html.escape(p.name)}">{html.escape(p.name)}</a> : '
+        f'{html.escape(DESCRIPTIONS.get(p.name, ""))}</li>'
         for p in sorted(compta.ROOT.glob("*.csv"))
     )
     return f"<h1>Compta SafOps</h1><ul>{items}</ul>"
@@ -48,7 +55,9 @@ def _table(path) -> str:
     tbody = "".join(
         "<tr>" + "".join(f"<td>{html.escape(c)}</td>" for c in row) + "</tr>" for row in body
     )
-    return f'<p><a href="/">Retour</a></p><h1>{html.escape(path.name)}</h1><table>{thead}{tbody}</table>'
+    description = html.escape(DESCRIPTIONS.get(path.name, ""))
+    return (f'<p><a href="/">Retour</a></p><h1>{html.escape(path.name)}</h1>'
+            f'<p>{description}</p><table>{thead}{tbody}</table>')
 
 
 class Handler(BaseHTTPRequestHandler):
