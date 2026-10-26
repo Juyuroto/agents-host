@@ -13,7 +13,17 @@ log = logging.getLogger("agent-prospects")
 URL = "https://bodacc-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/annonces-commerciales/records"
 PAGE_SIZE = 100
 MAX_PAGES = 10
-FIELDS = "dateparution,numerodepartement,commercant,ville,cp,registre,listeetablissements"
+FIELDS = "dateparution,numerodepartement,commercant,ville,cp,registre,listeetablissements,listepersonnes,url_complete"
+
+
+def _dirigeant(raw: str | None) -> str:
+    try:
+        personne = json.loads(raw or "{}").get("personne") or {}
+    except (ValueError, AttributeError):
+        return ""
+    if personne.get("typePersonne") == "pp":
+        return f"{personne.get('prenom') or ''} {personne.get('nom') or ''}".strip()
+    return personne.get("administration") or ""
 
 
 def _activite(raw: str | None) -> str:
@@ -80,6 +90,8 @@ def fetch_companies() -> list[dict]:
                 "ville": e.get("ville"),
                 "code_postal": e.get("cp"),
                 "date_parution": e.get("dateparution"),
+                "dirigeant": _dirigeant(e.get("listepersonnes")),
+                "lien": e.get("url_complete"),
             })
         if len(results) < PAGE_SIZE:
             break

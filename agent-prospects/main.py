@@ -15,8 +15,10 @@ def format_prospect(p: dict) -> str:
     return (
         f"**{p['nom']}** (SIREN {p['siren']})\n"
         f"Activité : {p['activite']} · {p['ville']} ({p['code_postal']}) · Score : {p['score']}/10\n"
+        f"Dirigeant : {p['dirigeant'] or 'non trouvé'}\n"
         f"Présence en ligne : {p['presence_en_ligne']}\n"
-        f"Angle : {p['angle']}"
+        f"Angle : {p['angle']}\n"
+        f"Source : {p['lien']}"
     )
 
 
