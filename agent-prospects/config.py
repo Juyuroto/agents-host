@@ -16,27 +16,20 @@ DISCORD_PROSPECTS_WEBHOOK_URL = _require("DISCORD_PROSPECTS_WEBHOOK_URL")
 
 DEPARTEMENTS = ["33", "87"]
 SEARCH_DAYS = 7
-MAX_SEARCHES = 5  # max_uses du web_search, par entreprise
-MAX_COMPANIES_PER_RUN = 20  # borne le coût Anthropic
+MAX_SEARCHES = 5
+MAX_COMPANIES_PER_RUN = 20
 MIN_SCORE = 6
 
-# Pré-filtre sur l'activité (minuscules, sans accents). Match en début de mot :
-# "plomb" couvre "plomberie", "plombier".
 ACTIVITY_KEYWORDS = [
-    # commerce, restauration, hôtellerie
     "commerce", "vente", "boutique", "magasin", "boulanger", "patisser", "boucher", "epicerie",
     "restaura", "traiteur", "snack", "pizza", "cafe", "bar ", "hotel", "hebergement", "coiffure",
     "esthetique", "fleur", "librairie", "vetement", "fromag",
-    # santé
     "medecin", "medical", "dentaire", "dentiste", "kinesith", "pharmacie", "veterinaire",
     "infirmi", "osteopath", "sante", "paramedical",
-    # professions libérales
     "avocat", "juridique", "expert-comptable", "comptab", "architect", "consultant", "conseil",
     "agence", "formation", "communication", "marketing",
-    # artisans / BTP
     "plomb", "electric", "batiment", "construction", "travaux", "chauffage", "menuiser",
     "maconnerie", "peinture", "couverture", "renovation", "installation", "climatisation",
-    # services aux entreprises, immobilier, bureaux / informatique
     "services aux entreprises", "nettoyage", "secretariat", "immobili", "transaction", "syndic",
     "informatique", "logiciel", "numerique", "web", "developpement", "bureau", "design",
 ]

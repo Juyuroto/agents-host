@@ -11,8 +11,8 @@ from config import ACTIVITY_EXCLUDE, ACTIVITY_KEYWORDS, DEPARTEMENTS, SEARCH_DAY
 log = logging.getLogger("agent-prospects")
 
 URL = "https://bodacc-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/annonces-commerciales/records"
-PAGE_SIZE = 100  # maximum accepté par l'API
-MAX_PAGES = 10  # borne dure (offset + limit <= 10000 côté API)
+PAGE_SIZE = 100
+MAX_PAGES = 10
 FIELDS = "dateparution,numerodepartement,commercant,ville,cp,registre,listeetablissements"
 
 
@@ -39,7 +39,7 @@ _KEEP, _DROP = _pattern(ACTIVITY_KEYWORDS), _pattern(ACTIVITY_EXCLUDE)
 
 
 def matches_activity(activite: str | None) -> bool:
-    a = _norm(activite) + " "  # espace final : permet les mots-clés "bar ", "sci "
+    a = _norm(activite) + " "
     return bool(a.strip()) and bool(_KEEP.search(a)) and not _DROP.search(a)
 
 

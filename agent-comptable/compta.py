@@ -1,4 +1,3 @@
-"""Données comptables SafOps : CSV (UTF-8 BOM, ';', virgule décimale), pièces, git local."""
 import csv
 import json
 import re
@@ -74,7 +73,6 @@ def _git(*args: str) -> subprocess.CompletedProcess:
 
 
 def commit(message: str) -> None:
-    """Commit de l'état courant ; rien si aucun changement."""
     _git("add", "-A")
     if _git("diff", "--cached", "--quiet").returncode == 0:
         return
@@ -98,7 +96,6 @@ def init() -> None:
         (ROOT / "categories.md").write_text(CATEGORIES_MD, encoding="utf-8")
     if not (ROOT / "README.md").exists():
         (ROOT / "README.md").write_text(README_MD, encoding="utf-8")
-    # git ne suit pas un dossier vide
     if not (ROOT / "pieces" / ".gitkeep").exists():
         (ROOT / "pieces" / ".gitkeep").touch()
     if not (ROOT / ".git").exists():
@@ -154,7 +151,6 @@ def _slug(libelle: str) -> str:
 
 def ajouter_ligne(kind: str, data: dict, piece: tuple[str, bytes] | None = None,
                   creer_annee: bool = False) -> str:
-    """Valide tout, puis : commit avant, écriture (pièce + ligne), commit après."""
     if kind not in ("depense", "recette"):
         raise ValueError("type doit être 'depense' ou 'recette'")
     d = date.fromisoformat(str(data.get("date", "")))

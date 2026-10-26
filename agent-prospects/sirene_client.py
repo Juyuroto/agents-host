@@ -8,9 +8,7 @@ from config import DEPARTEMENTS, NAF_CODES, SEARCH_DAYS
 log = logging.getLogger("agent-prospects")
 
 URL = "https://recherche-entreprises.api.gouv.fr/search"
-PER_PAGE = 25  # maximum accepté par l'API
-# L'API n'a pas de filtre sur la date de création : on filtre côté client,
-# donc on borne le nombre de pages parcourues.
+PER_PAGE = 25
 MAX_PAGES = 40
 
 

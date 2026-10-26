@@ -13,13 +13,13 @@ def new_requests(messages: list[dict], owner_id: str) -> list[dict]:
 
 
 def fetch_messages(after: str | None, limit: int = 50) -> list[dict]:
-    from config import DISCORD_BOT_TOKEN, DISCORD_DEVIS_CHANNEL_ID
+    from config import DISCORD_BOT_TOKEN, DISCORD_COMPTA_CHANNEL_ID
 
     params = {"limit": limit}
     if after:
         params["after"] = after
     r = requests.get(
-        f"{DISCORD_API}/channels/{DISCORD_DEVIS_CHANNEL_ID}/messages",
+        f"{DISCORD_API}/channels/{DISCORD_COMPTA_CHANNEL_ID}/messages",
         headers={"Authorization": f"Bot {DISCORD_BOT_TOKEN}"},
         params=params,
         timeout=10,
@@ -37,7 +37,6 @@ MAX_ATTACHMENT = 10 * 1024 * 1024
 
 
 def download_attachments(message: dict) -> dict[str, bytes]:
-    """Pièces jointes du message : {nom: contenu}. Hôte Discord CDN uniquement."""
     out = {}
     for a in message.get("attachments", []):
         url = a.get("url", "")

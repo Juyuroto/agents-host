@@ -53,7 +53,6 @@ def _analyze(company: dict) -> dict | None:
 
 
 def qualify(companies: list[dict]) -> list[dict]:
-    """Retourne les prospects retenus. Lève APIError si toutes les analyses échouent côté API."""
     prospects, api_errors = [], 0
     for company in companies:
         try:
