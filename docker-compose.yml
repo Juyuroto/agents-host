@@ -22,9 +22,20 @@ services:
     build: ./agent-techwatch
     env_file: .env
 
+  agent-prospects:
+    build: ./agent-prospects
+    env_file: .env
+
   agent-assistant:
     build: ./agent-assistant
     env_file: .env
     restart: unless-stopped
     volumes:
       - ./agent-assistant/data:/app/data
+
+  agent-comptable:
+    build: ./agent-comptable
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ./agent-comptable/data:/app/data

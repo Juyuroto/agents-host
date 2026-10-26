@@ -1,0 +1,1 @@
+30 8 * * 1 cd /opt/agents-host && docker compose run --rm agent-prospects >> /var/log/agent-prospects.log 2>&1
