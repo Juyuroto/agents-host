@@ -35,9 +35,8 @@ def run() -> None:
         log.info("Aucun prospect qualifié")
         return
     prospects.sort(key=lambda p: p["score"], reverse=True)
-    notify_discord(
-        "**Prospects de la semaine**\n\n" + "\n\n".join(format_prospect(p) for p in prospects)
-    )
+    for p in prospects:
+        notify_discord(format_prospect(p))
 
 
 if __name__ == "__main__":
