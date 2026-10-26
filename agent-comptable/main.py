@@ -1,9 +1,11 @@
 import asyncio
 import logging
+import threading
 
 import requests
 
 import compta
+import web
 from classifier import handle_request
 from config import DISCORD_OWNER_ID
 from discord_inbox import download_attachments, fetch_messages, latest_message_id, new_requests
@@ -46,4 +48,5 @@ async def run() -> None:
 
 
 if __name__ == "__main__":
+    threading.Thread(target=web.serve, daemon=True).start()
     asyncio.run(run())

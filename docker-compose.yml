@@ -37,5 +37,7 @@ services:
     build: ./agent-comptable
     env_file: .env
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     volumes:
       - ./agent-comptable/data:/app/data
