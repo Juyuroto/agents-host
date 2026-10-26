@@ -17,6 +17,11 @@ services:
   agent-github:
     build: ./agent-github
     env_file: .env
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Paris
+    volumes:
+      - ./agent-github/data:/app/data
 
   agent-techwatch:
     build: ./agent-techwatch
