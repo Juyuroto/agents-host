@@ -12,6 +12,7 @@ services:
       - NODE_ENV=production
       - WEBHOOK_URL=http://localhost:5678
       - GENERIC_TIMEZON=Europe/Paris
+      - N8N_BASIC_AUTH_ACTIVE=true
     networks:
       - agent
     volumes:
@@ -23,19 +24,60 @@ services:
     restart: unless-stopped
     ports:
       - 7869:11434
-    environment:
-      - OLLAMA_KEEP_ALIVE=24h
     networks:
       - agent
     volumes:
-      - ./ollama/ollama:/root/.ollama
+      - ./ollama/ollama:/root/.ollama:Z
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all 
+              count: all
               capabilities: [gpu]
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: ollama-pull
+    depends_on:
+      - ollama
+    networks:
+      - agent
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    entrypoint: ["sh", "-c", "sleep 5 && ollama pull qwen3:8b"]
+    restart: "no"
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
+    restart: unless-stopped
+    ports:
+      - 4000:4000
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+    depends_on:
+      - ollama
+    networks:
+      - agent
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    ports:
+      - 8888:8080
+    networks:
+      - agent
+    volumes:
+      - ./searxng:/etc/searxng
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8888/
+
 volumes:
   n8n:
 
