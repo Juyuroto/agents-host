@@ -1,48 +1,43 @@
 services:
-  agent-mail:
-    build: ./agent-mail
-    env_file: .env
-    restart: unless-stopped
-
-  agent-devis:
-    build: ./agent-devis
-    env_file: .env
-    restart: unless-stopped
-
-  agent-factures:
-    build: ./agent-factures
-    env_file: .env
-    restart: unless-stopped
-
-  agent-github:
-    build: ./agent-github
-    env_file: .env
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/Paris
-    volumes:
-      - ./agent-github/data:/app/data
-
-  agent-techwatch:
-    build: ./agent-techwatch
-    env_file: .env
-
-  agent-prospects:
-    build: ./agent-prospects
-    env_file: .env
-
-  agent-assistant:
-    build: ./agent-assistant
-    env_file: .env
-    restart: unless-stopped
-    volumes:
-      - ./agent-assistant/data:/app/data
-
-  agent-comptable:
-    build: ./agent-comptable
-    env_file: .env
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - 5678:5678
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678
+      - GENERIC_TIMEZON=Europe/Paris
+    networks:
+      - agent
     volumes:
-      - ./agent-comptable/data:/app/data
+      - n8n:/home/node/.n8n
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - 7869:11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - agent
+    volumes:
+      - ./ollama/ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all 
+              capabilities: [gpu]
+volumes:
+  n8n:
+
+networks:
+  agent:

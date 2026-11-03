@@ -1,0 +1,48 @@
+services:
+  agent-mail:
+    build: ./agent-mail
+    env_file: .env
+    restart: unless-stopped
+
+  agent-devis:
+    build: ./agent-devis
+    env_file: .env
+    restart: unless-stopped
+
+  agent-factures:
+    build: ./agent-factures
+    env_file: .env
+    restart: unless-stopped
+
+  agent-github:
+    build: ./agent-github
+    env_file: .env
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Paris
+    volumes:
+      - ./agent-github/data:/app/data
+
+  agent-techwatch:
+    build: ./agent-techwatch
+    env_file: .env
+
+  agent-prospects:
+    build: ./agent-prospects
+    env_file: .env
+
+  agent-assistant:
+    build: ./agent-assistant
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ./agent-assistant/data:/app/data
+
+  agent-comptable:
+    build: ./agent-comptable
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./agent-comptable/data:/app/data
